@@ -1,0 +1,91 @@
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
+-- Create the Console GUI
+local consoleGui = Instance.new("ScreenGui")
+consoleGui.Name = "AnimationConsoleGui"
+consoleGui.Parent = gethui()
+
+-- Create the background frame
+local background = Instance.new("Frame")
+background.Size = UDim2.new(0, 300, 0, 400)
+background.Position = UDim2.new(0, 10, 0, 10)
+background.BackgroundColor3 = Color3.new(0, 0, 0)
+background.BackgroundTransparency = 0.5
+background.Active = true
+background.Draggable = true
+background.Parent = consoleGui
+
+-- Create the scrollable frame
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -10, 1, -10)
+scrollFrame.Position = UDim2.new(0, 5, 0, 5)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 10
+scrollFrame.Parent = background
+
+-- Track animation IDs and their repetitions
+local animationCounts = {}
+
+-- Function to update the animation IDs
+local function updateAnimationIDs()
+    -- Get the player's humanoid
+    local player = Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        return
+    end
+
+    -- Get the existing animation IDs
+    local existingIDs = {}
+    for _, child in ipairs(scrollFrame:GetChildren()) do
+        if child:IsA("TextLabel") then
+            local id = child:GetAttribute("AnimationID")
+            table.insert(existingIDs, id)
+        end
+    end
+
+    -- Update the counts for existing animation IDs
+    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+        local animationId = tostring(track.Animation.AnimationId)
+        if table.find(existingIDs, animationId) then
+            for _, child in ipairs(scrollFrame:GetChildren()) do
+                if child:IsA("TextLabel") and child:GetAttribute("AnimationID") == animationId then
+                    animationCounts[animationId] = animationCounts[animationId] + 1
+                    child.Text = child:GetAttribute("AnimationName") .. " - " .. animationId .. " (+" .. animationCounts[animationId] .. ")"
+                end
+            end
+        end
+    end
+
+    -- Add new animation IDs to the GUI
+    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+        local animationId = tostring(track.Animation.AnimationId)
+        local animationName = track.Animation.Name
+
+        if not table.find(existingIDs, animationId) then
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, -10, 0, 40)
+            label.Position = UDim2.new(0, 5, 0, (#scrollFrame:GetChildren() * 40) + 5)
+            label.BackgroundTransparency = 1
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.Font = Enum.Font.SourceSansBold
+            label.TextSize = 12
+            label.Parent = scrollFrame
+
+            animationCounts[animationId] = 1
+            label:SetAttribute("AnimationID", animationId)
+            label:SetAttribute("AnimationName", animationName)
+            label.Text = animationName .. " - " .. animationId
+        end
+    end
+
+    -- Update the size of the scrollable frame
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #scrollFrame:GetChildren() * 40)
+end
+
+-- Update animation IDs periodically
+while true do
+    wait(1)
+    updateAnimationIDs()
+end
