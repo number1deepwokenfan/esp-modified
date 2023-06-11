@@ -4,7 +4,7 @@ local CoreGui = game:GetService("CoreGui")
 -- Create the Console GUI
 local consoleGui = Instance.new("ScreenGui")
 consoleGui.Name = "AnimationConsoleGui"
-consoleGui.Parent = CoreGui
+consoleGui.Parent = gethui()
 
 -- Create the background frame
 local background = Instance.new("Frame")
